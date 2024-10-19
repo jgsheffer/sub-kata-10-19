@@ -36,7 +36,7 @@ describe('Submarine Position Calculator', () => {
       'forward 3',
       'down 2'
     ];
-    expect(calculatePosition(commands)).toEqual({ horizontal: 3, depth: 0, product: 0 });
+    expect(calculatePosition(commands)).toEqual({ horizontal: 3, depth: 2, product: 6 });
   });
 
   it('handles large numbers', () => {
