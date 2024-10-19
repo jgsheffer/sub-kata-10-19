@@ -1,5 +1,5 @@
 
-import  {calculatePosition }  from '../src/submarine';
+import  {calculatePosition, Command }  from '../src/submarine';
 
 describe('Submarine Position Calculator', () => {
   it('returns {horizontal: 0, depth: 0} for an empty input', () => {
@@ -19,7 +19,7 @@ describe('Submarine Position Calculator', () => {
   });
 
   it('correctly calculates position for multiple commands', () => {
-    const commands = [
+    const commands: Array<Command> = [
       'forward 5',
       'down 5',
       'forward 8',
@@ -31,7 +31,7 @@ describe('Submarine Position Calculator', () => {
   });
 
   it('handles negative depths (submarines cant fly)', () => {
-    const commands = [
+    const commands: Array<Command> = [
       'up 5',
       'forward 3',
       'down 2'
@@ -40,7 +40,7 @@ describe('Submarine Position Calculator', () => {
   });
 
   it('handles large numbers', () => {
-    const commands = [
+    const commands: Array<Command> = [
       'forward 1000000',
       'down 2000000',
       'up 1000000'
@@ -49,10 +49,10 @@ describe('Submarine Position Calculator', () => {
   });
 
   it('throws an error for invalid commands', () => {
-    expect(() => calculatePosition(['sideways 5'])).toThrow('Invalid command: sideways 5');
+    expect(() => calculatePosition(['sideways 5' as Command])).toThrow('Invalid command: sideways 5');
   });
 
   it('throws an error for commands with invalid numbers', () => {
-    expect(() => calculatePosition(['forward abc'])).toThrow('Invalid command: forward abc');
+    expect(() => calculatePosition(['forward abc' as Command])).toThrow('Invalid command: forward abc');
   });
 });
