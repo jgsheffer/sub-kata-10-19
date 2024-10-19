@@ -1,0 +1,23 @@
+{
+  "name": "submarine-kata",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/submarine.js",
+  "scripts": {
+    "test": "jest",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "devDependencies": {
+    "@types/jest": "^29.5.13",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"]
+  }
+}
