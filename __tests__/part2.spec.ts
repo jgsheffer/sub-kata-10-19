@@ -2,7 +2,7 @@
 import  { Command }  from '../src/submarine';
 import { calculatePositionWithAim } from '../src/submarine2';
 
-describe('Submarine Position Calculator', () => {
+describe('Submarine Position Calculator part2', () => {
   it('returns {horizontal: 0, depth: 0, product:0} for an empty input', () => {
     expect(calculatePositionWithAim([])).toEqual({ horizontal: 0, depth: 0, product: 0 });
   });
@@ -12,7 +12,7 @@ describe('Submarine Position Calculator', () => {
   });
 
   it('correctly calculates position for a single down command', () => {
-    expect(calculatePositionWithAim(['down 3'])).toEqual({ horizontal: 0, depth: 3,  product: 0 });
+    expect(calculatePositionWithAim(['down 3'])).toEqual({ horizontal: 0, depth: 0,  product: 0 });
   });
 
   it('correctly calculates position for a single up command', () => {
@@ -21,32 +21,33 @@ describe('Submarine Position Calculator', () => {
 
   it('correctly calculates position for multiple commands', () => {
     const commands: Array<Command> = [
-      'forward 5',
-      'down 5',
-      'forward 8',
-      'up 3',
-      'down 8',
-      'forward 2'
+      'forward 5', // { horizontal: 5, depth: 0 } aim 0
+      'down 5', // { horizontal: 5, depth: 0 } aim 5
+      'forward 8', //{ horizontal: 13, depth: 40 } aim 5
+      'up 3', //{ horizontal: 13, depth: 5 } aim 2
+      'down 8', //{ horizontal: 13, depth: 5 } aim 10
+      'forward 2'//{ horizontal: 15, depth: 60 } aim 10
     ];
-    expect(calculatePositionWithAim(commands)).toEqual({ horizontal: 15, depth: 10, product: 150 });
+    expect(calculatePositionWithAim(commands)).toEqual({ horizontal: 15, depth: 60, product: 900 });
   });
 
   it('handles negative depths (submarines cant fly)', () => {
     const commands: Array<Command> = [
-      'up 5',
-      'forward 3',
-      'down 2'
+      'up 5', // { horizontal: 0, depth: 0 } aim -5
+      'forward 3', // { horizontal: 3, depth: 0 } aim -5
+      'down 6', // { horizontal: 3, depth: 0 } aim 1
+      'forward 2' // { horizontal: 5, depth: 2 } aim 1
     ];
-    expect(calculatePositionWithAim(commands)).toEqual({ horizontal: 3, depth: 2, product: 6 });
+    expect(calculatePositionWithAim(commands)).toEqual({ horizontal: 5, depth: 2, product: 10 });
   });
 
   it('handles large numbers', () => {
     const commands: Array<Command> = [
       'forward 1000000',
       'down 2000000',
-      'up 1000000'
+      'forward 1000000',
     ];
-    expect(calculatePositionWithAim(commands)).toEqual({ horizontal: 1000000, depth: 1000000, product: 1000000000000 });
+    expect(calculatePositionWithAim(commands)).toEqual({ horizontal: 2000000, depth: 2000000000000, product: 4000000000000000000 });
   });
 
   it('throws an error for invalid commands', () => {
