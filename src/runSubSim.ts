@@ -16,7 +16,7 @@ const readCommandsFromFile = (filePath: string): Command[] => {
 const main = () => {
   const args = process.argv.slice(2);
   if (args.length !== 1) {
-    console.error('Usage: npm run dev -- <input_file>');
+    console.error('Usage: npm run runSubSim -- <input_file>');
     process.exit(1);
   }
 
