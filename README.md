@@ -1,5 +1,13 @@
 # --- Submarine Puzzle ---
 
+## Commands
+
+- `npm test` : Run jest unit tests
+- `npm run runSubSim -- ./data/input_1.txt` : Run calculations with input file
+
+# ---Part 1 ---
+src/submarine.ts
+
 Bam! You've found yourself teleported into a submarine, deep under the sea.
 
 Now, you need to figure out how to pilot this thing. You spot a dusty manual sitting near a computer console in the sub.
@@ -40,6 +48,7 @@ After following these instructions, you would have a horizontal position of 15 a
 
 Calculate the horizontal position and depth you would have after following the planned course. What do you get if you multiply your final horizontal position by your final depth?
 # --- Part Two ---
+src/submarine2.ts
 
 Based on your calculations, the planned course doesn't seem to make any sense. You continue reading the submarine manual and discover that the process is actually slightly more complicated.
 
