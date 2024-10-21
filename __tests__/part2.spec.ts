@@ -1,6 +1,6 @@
 
-import  { Command }  from '../src/submarine';
 import { calculatePositionWithAim } from '../src/submarine2';
+import { Command } from '../src/subTypes';
 
 describe('Submarine Position Calculator part2', () => {
   it('returns {horizontal: 0, depth: 0, product:0} for an empty input', () => {
@@ -21,12 +21,12 @@ describe('Submarine Position Calculator part2', () => {
 
   it('correctly calculates position for multiple commands', () => {
     const commands: Array<Command> = [
-      'forward 5', // { horizontal: 5, depth: 0 } aim 0
-      'down 5', // { horizontal: 5, depth: 0 } aim 5
-      'forward 8', //{ horizontal: 13, depth: 40 } aim 5
-      'up 3', //{ horizontal: 13, depth: 5 } aim 2
-      'down 8', //{ horizontal: 13, depth: 5 } aim 10
-      'forward 2'//{ horizontal: 15, depth: 60 } aim 10
+      'forward 5', 
+      'down 5', 
+      'forward 8', 
+      'up 3', 
+      'down 8', 
+      'forward 2'
     ];
     expect(calculatePositionWithAim(commands)).toEqual({ horizontal: 15, depth: 60, product: 900 });
   });

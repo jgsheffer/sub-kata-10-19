@@ -1,11 +1,5 @@
+import { Command, Position } from "./subTypes";
 
-export type Command = `${'forward' | 'up' | 'down'} ${number}`;
-
-export interface Position {
-  horizontal: number;
-  depth: number;
-  product: number;
-}
 
 export const calculatePosition = (commands: Command[]): Position => {
   let horizontal = 0;

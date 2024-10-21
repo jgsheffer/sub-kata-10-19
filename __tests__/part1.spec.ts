@@ -1,5 +1,6 @@
 
-import  {calculatePosition, Command }  from '../src/submarine';
+import  {calculatePosition }  from '../src/submarine';
+import { Command } from '../src/subTypes';
 
 describe('Submarine Position Calculator', () => {
   it('returns {horizontal: 0, depth: 0, product:0} for an empty input', () => {

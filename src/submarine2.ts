@@ -1,4 +1,4 @@
-import { Command, Position } from "./submarine";
+import { Command, Position } from "./subTypes";
 
 
 
