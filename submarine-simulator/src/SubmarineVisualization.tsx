@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { calculatePositionWithAim, Command, Position } from './types';
+import { Command, Position } from './types';
 import {
   Box, Container, Typography, Radio, RadioGroup, FormControlLabel, TextField,
   Fab, Snackbar, Grid, CardContent, AppBar, Toolbar
@@ -15,6 +15,7 @@ import { theme } from './theme';
 import { VisualizationContainer, ControlCard } from './StyledComponents';
 import { setupScene } from './SceneSetup';
 import { createTextSprite, updateTextSprite } from './TextSprite';
+import { calculatePositionWithAim } from './submarine';
 
 const SubmarineVisualization: React.FC = () => {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -24,6 +25,7 @@ const SubmarineVisualization: React.FC = () => {
   const submarineRef = useRef<THREE.Group | null>(null);
   const fishRef = useRef<THREE.Group[]>([]);
   const positionTextRef = useRef<THREE.Sprite | null>(null);
+  const pathRef = useRef<THREE.Line | null>(null);
 
   const initialCommands: Command[] = [
     'forward 5',
@@ -31,27 +33,56 @@ const SubmarineVisualization: React.FC = () => {
     'forward 8',
     'up 3',
     'down 8',
-    'forward 2'
+    'forward 2',
+     'left 90',
+     'forward 10',
+     'left 90',
+     'forward 10',
+
   ];
+  const initialPosition: Position = { x: 0, y: 0, z: 0, pitch: 0, yaw: 0 };
   const [commands, setCommands] = useState<Command[]>(initialCommands);
-  const [commandType, setCommandType] = useState<'forward' | 'up' | 'down'>('forward');
+  const [commandType, setCommandType] = useState<'forward' | 'up' | 'down' | 'left' | 'right'>('forward');
   const [commandValue, setCommandValue] = useState<string>('');
   const [isPlaying, setIsPlaying] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [currentPosition, setCurrentPosition] = useState<Position>({ horizontal: 0, depth: 0, aim: 0 });
+  const [currentPosition, setCurrentPosition] = useState<Position>(initialPosition);
 
   const updatePositionText = (position: Position) => {
     if (positionTextRef.current && submarineRef.current) {
-      const text = `H: ${position.horizontal.toFixed(2)}, D: ${position.depth.toFixed(2)}`;
+      const text = `X: ${position.x.toFixed(2)}, Y: ${position.y.toFixed(2)}, Z: ${position.z.toFixed(2)}`;
       updateTextSprite(positionTextRef.current, text);
     }
   };
 
-  const updateSubmarineRotation = (aim: number) => {
+  const updateSubmarineRotation = (pitch: number, yaw: number) => {
     if (submarineRef.current) {
-      // Convert aim to radians and limit the rotation to a maximum of 45 degrees
-      const rotationAngle = THREE.MathUtils.degToRad(Math.min(Math.max(aim * -5, -45), 45));
-      submarineRef.current.rotation.z = rotationAngle;
+      submarineRef.current.rotation.x = pitch;
+      submarineRef.current.rotation.y = -yaw; // Reverse the yaw rotation
+    }
+  };
+
+  const initializePath = () => {
+    if (sceneRef.current && !pathRef.current) {
+      const geometry = new THREE.BufferGeometry();
+      const material = new THREE.LineBasicMaterial({ color: 0xffff00 });
+      pathRef.current = new THREE.Line(geometry, material);
+      sceneRef.current.add(pathRef.current);
+    }
+  };
+  const updatePath = (position: THREE.Vector3) => {
+    if (pathRef.current) {
+      const positions = pathRef.current.geometry.getAttribute('position');
+      let newPositions: Float32Array;
+      
+      if (positions && positions.array.length > 0) {
+        newPositions = new Float32Array([...Array.from(positions.array), position.x, position.y, position.z]);
+      } else {
+        newPositions = new Float32Array([position.x, position.y, position.z]);
+      }
+      
+      pathRef.current.geometry.setAttribute('position', new THREE.BufferAttribute(newPositions, 3));
+      pathRef.current.geometry.attributes.position.needsUpdate = true;
     }
   };
 
@@ -65,9 +96,11 @@ const SubmarineVisualization: React.FC = () => {
     submarineRef.current = submarine;
     fishRef.current = fish;
 
-    positionTextRef.current = createTextSprite('H: 0.00, D: 0.00, A: 0.00');
+    positionTextRef.current = createTextSprite('X: 0.00, Y: 0.00, Z: 0.00');
     positionTextRef.current.position.set(0, 2, 0);
     submarine.add(positionTextRef.current);
+
+    initializePath();
 
     const controls = new OrbitControls(camera, renderer.domElement);
 
@@ -107,12 +140,10 @@ const SubmarineVisualization: React.FC = () => {
       }
     };
   }, []);
-// update the text sprite when the current position changes
+
   useEffect(() => {
     updatePositionText(currentPosition);
   }, [currentPosition]);
-
-
 
   const handleAddCommand = () => {
     const value = parseInt(commandValue, 10);
@@ -128,7 +159,6 @@ const SubmarineVisualization: React.FC = () => {
   const handlePlay = () => {
     if (!submarineRef.current) return;
     setIsPlaying(true);
-    const totalDistance = 80;
     const duration = commands.length * 500; // 0.5 second per command
     const startTime = Date.now();
 
@@ -137,15 +167,14 @@ const SubmarineVisualization: React.FC = () => {
       const progress = Math.min(elapsedTime / duration, 1);
       
       const newPosition = calculatePositionWithAim(commands.slice(0, Math.ceil(progress * commands.length)));
-      const targetX = -40 + (newPosition.horizontal / 50) * totalDistance;
-      const targetY = -newPosition.depth / 10;
 
-      submarineRef.current!.position.x = THREE.MathUtils.lerp(submarineRef.current!.position.x, targetX, 0.05);
-      submarineRef.current!.position.y = THREE.MathUtils.lerp(submarineRef.current!.position.y, targetY, 0.05);
+      submarineRef.current!.position.x = THREE.MathUtils.lerp(submarineRef.current!.position.x, newPosition.x, 0.05);
+      submarineRef.current!.position.y = THREE.MathUtils.lerp(submarineRef.current!.position.y, newPosition.y, 0.05);
+      submarineRef.current!.position.z = THREE.MathUtils.lerp(submarineRef.current!.position.z, newPosition.z, 0.05);
 
       setCurrentPosition(newPosition);
-      updatePositionText(newPosition);
-      updateSubmarineRotation(newPosition.aim);
+      updateSubmarineRotation(newPosition.pitch, newPosition.yaw);
+      updatePath(submarineRef.current!.position);
 
       if (progress < 1) {
         requestAnimationFrame(animateSubmarine);
@@ -158,17 +187,20 @@ const SubmarineVisualization: React.FC = () => {
   };
 
   const handleReset = () => {
-    setCommands([]);
+    setCommands(initialCommands);
     setIsPlaying(false);
-    const initialPosition = { horizontal: 0, depth: 0, aim: 0 };
     setCurrentPosition(initialPosition);
     if (submarineRef.current) {
-      submarineRef.current.position.set(-40, 0, 0);
-      submarineRef.current.rotation.z = 0;
+      submarineRef.current.position.set(0, 0, 0);
+      submarineRef.current.rotation.set(0, 0, 0);
     }
     updatePositionText(initialPosition);
+    if (pathRef.current && sceneRef.current) {
+      sceneRef.current.remove(pathRef.current);
+      pathRef.current = null;
+      initializePath();
+    }
   };
-
 
   return (
     <ThemeProvider theme={theme}>
@@ -191,19 +223,22 @@ const SubmarineVisualization: React.FC = () => {
             <ControlCard>
               <CardContent>
                 <Typography variant="h6" gutterBottom>Current Position</Typography>
-                <Typography>Horizontal: {currentPosition.horizontal}</Typography>
-                <Typography>Depth: {currentPosition.depth}</Typography>
-                <Typography>Aim: {currentPosition.aim}</Typography>
-                <Typography>Product: {currentPosition.horizontal * currentPosition.depth}</Typography>
+                <Typography>X: {currentPosition.x.toFixed(2)}</Typography>
+                <Typography>Y: {currentPosition.y.toFixed(2)}</Typography>
+                <Typography>Z: {currentPosition.z.toFixed(2)}</Typography>
+                <Typography>Pitch: {(currentPosition.pitch * 180 / Math.PI).toFixed(2)}°</Typography>
+                <Typography>Yaw: {(currentPosition.yaw * 180 / Math.PI).toFixed(2)}°</Typography>
               </CardContent>
             </ControlCard>
             <ControlCard>
               <CardContent>
                 <Typography variant="h6" gutterBottom>Controls</Typography>
-                <RadioGroup row value={commandType} onChange={(e) => setCommandType(e.target.value as 'forward' | 'up' | 'down')}>
+                <RadioGroup row value={commandType} onChange={(e) => setCommandType(e.target.value as 'forward' | 'up' | 'down' | 'left' | 'right')}>
                   <FormControlLabel value="forward" control={<Radio />} label="Forward" />
                   <FormControlLabel value="up" control={<Radio />} label="Up" />
                   <FormControlLabel value="down" control={<Radio />} label="Down" />
+                  <FormControlLabel value="left" control={<Radio />} label="Left" />
+                  <FormControlLabel value="right" control={<Radio />} label="Right" />
                 </RadioGroup>
                 <TextField
                   fullWidth

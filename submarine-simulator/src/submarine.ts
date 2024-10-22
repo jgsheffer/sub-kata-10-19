@@ -1,16 +1,11 @@
-export type Command = `${'forward' | 'up' | 'down'} ${number}`;
-
-export interface Position {
-  horizontal: number;
-  depth: number;
-  product: number;
-}
-
-
+import { Command, Position } from "./types";
 export const calculatePositionWithAim = (commands: Command[]): Position => {
-  let horizontal = 0;
-  let depth = 0;
-  let aim = 0;
+  let x = 0;
+  let y = 0;
+  let z = 0;
+  let pitch = 0;
+  let yaw = 0;
+
   for (const command of commands) {
     const [action, valueStr] = command.split(' ');
     const value = parseInt(valueStr, 10);
@@ -21,20 +16,27 @@ export const calculatePositionWithAim = (commands: Command[]): Position => {
 
     switch (action) {
       case 'forward':
-        horizontal += value;
-      // Ensure depth never goes below 0
-      depth =  Math.max(0, depth + value*aim)
-        break;
-      case 'down':
-        aim += value;
+        // Move forward in the direction the submarine is facing
+        x += value * Math.cos(yaw) * Math.cos(pitch);
+        y += value * Math.sin(pitch);
+        z += value * Math.sin(yaw) * Math.cos(pitch);
         break;
       case 'up':
-        aim -= value;
+        pitch = Math.min(pitch + value * (Math.PI / 180), Math.PI / 4); // Limit pitch to 45 degrees
+        break;
+      case 'down':
+        pitch = Math.max(pitch - value * (Math.PI / 180), -Math.PI / 4); // Limit pitch to -45 degrees
+        break;
+      case 'left':
+        yaw = (yaw - value * (Math.PI / 180)) % (2 * Math.PI);
+        break;
+      case 'right':
+        yaw = (yaw + value * (Math.PI / 180)) % (2 * Math.PI);
         break;
       default:
         throw new Error(`Invalid command: ${command}`);
     }
   }
-  return { horizontal, depth, product: horizontal * depth };
-}
 
+  return { x, y, z, pitch, yaw };
+};
